@@ -1,11 +1,4 @@
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  push:
-    branches:
-      - master
-      - '0.[0-9]+.x'
-      - '1.[0-9]+.x'
+on: push
 
 name: CI Tests
 
@@ -162,9 +155,9 @@ jobs:
         run: |
             choco install mysql
             "C:\tools\mysql\current\bin\mysql" -e "create database diesel_test; create database diesel_unit_test; grant all on `diesel_%`.* to 'root'@'localhost';" -uroot
-            echo ::set-env name=MYSQL_DATABASE_URL::mysql://root@localhost/diesel_test
-            echo ::set-env name=MYSQL_EXAMPLE_DATABASE_URL::mysql://root@localhost/diesel_example
-            echo ::set-env name=MYSQL_UNIT_TEST_DATABASE_URL::mysql://root@localhost/diesel_unit_test
+            echo ::set-env name=MYSQL_DATABASE_URL::mysql://root@localhost/diesel_test?ssl_mode=preferred
+            echo ::set-env name=MYSQL_EXAMPLE_DATABASE_URL::mysql://root@localhost/diesel_example?ssl_mode=required
+            echo ::set-env name=MYSQL_UNIT_TEST_DATABASE_URL::mysql://root@localhost/diesel_unit_test?ssl_mode=disabled
             echo ::set-env name=MYSQLCLIENT_LIB_DIR::C:\tools\mysql\current\lib
 
       - name: Install rust toolchain
