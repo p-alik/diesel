@@ -1,21 +1,28 @@
+extern crate url;
+
 use diesel::connection::SimpleConnection;
 use diesel::dsl::sql;
+use diesel::mysql::connection::url::ConnectionOptions;
 use diesel::sql_types::Bool;
 use diesel::*;
 
 pub struct Database {
     url: String,
+    connection_options: ConnectionOptions,
 }
 
 impl Database {
     pub fn new(url: &str) -> Self {
-        Database { url: url.into() }
+        let connection_options = ConnectionOptions::parse(url).expect("url parsing failed");
+        Database {
+            url: url.into(),
+            connection_options: connection_options,
+        }
     }
 
     pub fn create(self) -> Self {
-        let (database, mysql_url) = self.split_url();
-        let conn = MysqlConnection::establish(&mysql_url).unwrap();
-        conn.execute(&format!("CREATE DATABASE `{}`", database))
+        let conn = MysqlConnection::establish(self.information_schema_url().as_ref()).unwrap();
+        conn.execute(&format!("CREATE DATABASE `{}`", self.database_name()))
             .unwrap();
         self
     }
@@ -48,23 +55,34 @@ impl Database {
             .expect(&format!("Error executing command {}", command));
     }
 
-    fn split_url(&self) -> (String, String) {
+    fn database_name(&self) -> String {
+        self.connection_options
+            .database()
+            .expect("database unwrapping failed")
+            .to_str()
+            .expect("failed to convert Cstr to str")
+            .to_string()
+    }
+
+    fn information_schema_url(&self) -> String {
         let mut split: Vec<&str> = self.url.split("/").collect();
-        let database = split.pop().unwrap();
+        let _ = split.pop().unwrap();
         let mysql_url = format!("{}/{}", split.join("/"), "information_schema");
-        (database.into(), mysql_url)
+        mysql_url
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
-        let (database, mysql_url) = self.split_url();
         let conn = try_drop!(
-            MysqlConnection::establish(&mysql_url),
+            MysqlConnection::establish(self.information_schema_url().as_ref()),
             "Couldn't connect to database"
         );
         try_drop!(
-            conn.execute(&format!("DROP DATABASE IF EXISTS `{}`", database)),
+            conn.execute(&format!(
+                "DROP DATABASE IF EXISTS `{}`",
+                self.database_name()
+            )),
             "Couldn't drop database"
         );
     }
