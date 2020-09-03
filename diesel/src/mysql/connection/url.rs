@@ -9,7 +9,7 @@ use std::ffi::{CStr, CString};
 use crate::result::{ConnectionError, ConnectionResult};
 
 use mysqlclient_sys::mysql_ssl_mode;
-
+#[allow(missing_debug_implementations, missing_docs)]
 pub struct ConnectionOptions {
     host: Option<CString>,
     user: CString,
@@ -21,6 +21,7 @@ pub struct ConnectionOptions {
 }
 
 impl ConnectionOptions {
+    #[allow(missing_docs)]
     pub fn parse(database_url: &str) -> ConnectionResult<Self> {
         let url = match Url::parse(database_url) {
             Ok(url) => url,
@@ -91,30 +92,37 @@ impl ConnectionOptions {
         })
     }
 
+    #[allow(missing_docs)]
     pub fn host(&self) -> Option<&CStr> {
         self.host.as_ref().map(|x| &**x)
     }
 
+    #[allow(missing_docs)]
     pub fn user(&self) -> &CStr {
         &self.user
     }
 
+    #[allow(missing_docs)]
     pub fn password(&self) -> Option<&CStr> {
         self.password.as_ref().map(|x| &**x)
     }
 
+    #[allow(missing_docs)]
     pub fn database(&self) -> Option<&CStr> {
         self.database.as_ref().map(|x| &**x)
     }
 
+    #[allow(missing_docs)]
     pub fn port(&self) -> Option<u16> {
         self.port
     }
 
+    #[allow(missing_docs)]
     pub fn unix_socket(&self) -> Option<&CStr> {
         self.unix_socket.as_ref().map(|x| &**x)
     }
 
+    #[allow(missing_docs)]
     pub fn ssl_mode(&self) -> Option<mysql_ssl_mode> {
         self.ssl_mode
     }
